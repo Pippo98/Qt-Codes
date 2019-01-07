@@ -1,8 +1,8 @@
 # Qt-Codes
 
-#Serial Graph Plotter
+# Serial Graph Plotter
 
-##Description
+## Description
 This is an application able to plot multiple graphs
 The way it gets the data is via serial port
 The device connected will send numbers representing the data to be plot
