@@ -1,4 +1,4 @@
-#include "graph.h"
+﻿#include "graph.h"
 #include "serial.h"
 #include "backend.h"
 
@@ -13,7 +13,6 @@
 static QFile *fil = new QFile();
 static QTimer *tim1 = new QTimer();
 
-const auto ser = QSerialPortInfo::availablePorts();
 static graph g;
 static backend b;
 static serial *s = new serial;
@@ -31,10 +30,16 @@ static QString dirName = "/home/filippo/Scrivania/logFolder";
 //has to be in the same order of how are appended the variables in canArr in parseCan() function
 static QList<QString> Frontal   = {"enc1", "enc2", "aX", "aY", "aZ", "gX", "gY", "gZ", "steer"};
 static QList<QString> Pedals    = {"apps1", "apps2", "brk"};
-static QList<QString> Ecu       = {};
-static QList<QString> Inverter  = {};
-static QList<QString> Lv        = {};
-static QList<QString> Hv        = {};
+static QList<QString> Ecu       = {"cmd1", "cmd2"};
+static QList<QString> Inverter  = {"temp1", "temp2"};
+static QList<QString> Lv        = {"volts", "amps"};
+static QList<QString> Hv        = {"volts", "amps", "temp"};
+
+static QStringList              switchNames = {"Frontal", "Pedals", "ECU", "Inverter", "Lv", "Hv"};
+static QVector<int>             switchesSelections;
+static QList<QStringList>       secondarySwitchNames = {Frontal, Pedals, Ecu, Inverter, Lv, Hv};
+static QVector<QVector<int>>    secondarySwitchSelections;
+static QVector<int>             graphSelection;
 /*----------------------------------------------------------------------------------------------*/
 
 static bool logState = false;
@@ -44,13 +49,15 @@ static double average = 0;
 static int iterations = 0;
 static bool doneCalibration = false;
 
-static QString text;
-
 static QVector<double> canArr;
 static QVector<double> dataArray;
 
 static QList<QString> graphsNames;
+static QList<QString> grph = {Frontal + Pedals + Ecu + Inverter + Lv + Hv};
 
+static QVector<QPair<int, QVector<int>>> switchesState;
+
+static QVector<QVector<int>> secondarySwitches;
 /*----------------------------------------------------------------------------------------------*/
 //Structures
 
@@ -105,15 +112,13 @@ serial::~serial(){
     fil->close();
 }
 
-//principal function to manage the functuons flow
+//main function to manage the program flow
 void serial::manageFunctions(){
-
-    serialData = serialPort->readLine();
-    while(serialPort->bytesAvailable() > 100){
-        serialPort->readLine();
+    while(serialPort->bytesAvailable() > 50){
+        serialData = serialPort->readLine();
+        if(logState)
+        fil->write(serialData);
     }
-    //serialData = serialPort->readAll();
-    //serialPort->readAll();
 
     if(!doneCalibration && !CAN_MODE){
         detectGraphs();
@@ -122,13 +127,12 @@ void serial::manageFunctions(){
         parseData();
 
         if(CAN_MODE){
-        parseCan();
+            parseCan();
+            g.managePoints(canArr);
         }
-
-        g.managePoints();
-
-        if(logState)
-        fil->write(serialData);
+        else{
+            g.managePoints(dataArray);
+        }
     }
 }
 
@@ -162,40 +166,47 @@ void serial::parseCan(){
         }
     }
 
+    if(switchesSelections.count() > 2){
+        //FRONTAL
+        if(switchesSelections.at(0) == 1){
+            canArr.append(frontal.encoder1);
+            canArr.append(frontal.encoder2);
+            canArr.append(frontal.ax);
+            canArr.append(frontal.ay);
+            canArr.append(frontal.az);
+            canArr.append(frontal.gx);
+            canArr.append(frontal.gy);
+            canArr.append(frontal.gz);
+            canArr.append(frontal.steer);
+        }
+        //PEDALS
+        if(switchesSelections.at(1) == 1){
+            canArr.append(pedals.apps1);
+            canArr.append(pedals.apps2);
+            canArr.append(pedals.brk);
+        }
+        //ECU
+        if(switchesSelections.at(2)== 1){
 
-    //FRONTAL
-    if(requestedGraphs.at(0) == 1){
-        canArr.append(frontal.encoder1);
-        canArr.append(frontal.encoder2);
-        canArr.append(frontal.ax);
-        canArr.append(frontal.ay);
-        canArr.append(frontal.az);
-        canArr.append(frontal.gx);
-        canArr.append(frontal.gy);
-        canArr.append(frontal.gz);
-        canArr.append(frontal.steer);
-    }
-    //PEDALS
-    if(requestedGraphs.at(1) == 1){
-        canArr.append(pedals.apps1);
-        canArr.append(pedals.apps2);
-        canArr.append(pedals.brk);
-    }
-    //ECU
-    if(requestedGraphs.at(2) == 1){
+        }/*
+        //INVERTER
+        if(switchesSelections.at(3) == 1){
 
-    }
-    //INVERTER
-    if(requestedGraphs.at(3) == 1){
+        }
+        //LOW VOLTAGE
+        if(switchesSelections.at(4) == 1){
 
-    }
-    //LOW VOLTAGE
-    if(requestedGraphs.at(4) == 1){
+        }
+        //HIGH VOLTAGE
+        if(switchesSelections.at(5) == 1){
 
-    }
-    //HIGH VOLTAGE
-    if(requestedGraphs.at(6) == 1){
-
+        }*/
+        QVector<double> buff;
+        for(int i = 0; i < graphSelection.count(); i++){
+            if(graphSelection.at(i) == 1 && i < canArr.count())
+            buff.append(canArr.at(i));
+        }
+        canArr = buff;
     }
 }
 
@@ -204,33 +215,23 @@ void serial::parseData(){
 
     QStringList numberArr;
     QByteArray number;
-    QChar byte;
+    QList<QByteArray> dataSplitted;
 
-    for(int i = 0; i < serialData.count(); i++){
-        byte = QChar(serialData[i]);
-        if(byte != '\t' && byte != '\n'){  //these are the separator from the different numbers in the received buffer
-            number.append(byte);
-        }
-        else{
-            numberArr.append(number);
-            number.clear();
-        }
-    }
+    dataSplitted = serialData.split('\t');
 
-    if(numberArr.length() == g.totalGraphs || CAN_MODE){            //if the numbers found in the received string are te same number ad the average found then do the cast fo float
-        for(int i = 0; i < numberArr.length(); i++){
-            if(dataArray.length() < numberArr.length()){
-                dataArray.append(numberArr[i].toDouble());
+    if(dataSplitted.count() == g.totalGraphs || CAN_MODE){            //if the numbers found in the received string are te same number ad the average found then do the cast fo float
+        for(int i = 0; i < dataSplitted.count(); i++){
+            if(dataArray.length() < dataSplitted.count()){
+                dataArray.append(dataSplitted[i].toDouble());
             }
             else{
-                dataArray.replace(i, numberArr[i].toDouble());
+                dataArray.replace(i, dataSplitted[i].toDouble());
             }
         }
     }
     else{
         qDebug() << "wrong";
     }
-
 }
 
 //initialization
@@ -240,8 +241,8 @@ void serial::parseData(){
 void serial::detectGraphs(){
     int counter = 0;
 
-    for(int j = 0; j < serialData.length(); j++){
-        if(serialData[j] == '\t' || serialData[j] == '\n'){
+    for(int i = 0; i < serialData.length(); i++){
+        if(serialData[i] == '\t' || serialData[i] == '\n'){
             counter ++;
         }
     }
@@ -259,10 +260,11 @@ void serial::detectGraphs(){
 //this is called fron the qml to set the combo box
 QStringList serial::detectPort(){
     QStringList port_list;
+    const auto serial = QSerialPortInfo::availablePorts();
 
     port_list.append("      ");
 
-    for(const QSerialPortInfo &ser_ : ser)    {
+    for(const QSerialPortInfo &ser_ : serial){
         port_list.append(ser_.portName());
     }
 
@@ -283,20 +285,21 @@ QString serial::portInfo(QString port){
             info.append(serialPortInfo.manufacturer());
         }
     }
-
     return info;
 }
 
 void serial::updateGraphsNames(){
     graphsNames.clear();
-    if(requestedGraphs.at(0) == 1)  graphsNames.append(Frontal);
-    if(requestedGraphs.at(1) == 1)  graphsNames.append(Pedals);
-    if(requestedGraphs.at(2) == 1)  graphsNames.append(Ecu);
+    if(switchesSelections.count() < switchNames.count())
+        return;
+    for(int i = 0; i < switchesSelections.count(); i++){
+        for(int j = 0; j < secondarySwitchSelections.at(i).count(); j ++){
+            if(switchesSelections.at(i) == 1 && secondarySwitchSelections.at(i).at(j) == 1){
+                graphsNames.append(secondarySwitchNames.at(i).at(j));
+            }
+        }
+    }
     g.setGraphsNames(graphsNames);
-}
-
-QString serial::print_data(){
-    return text;
 }
 
 bool serial::isSerialOpened(){
@@ -306,6 +309,7 @@ bool serial::isSerialOpened(){
 //INIT-DEINIT Functions
 
 void serial::restartSequence(){
+    iterations = 0;
     dataArray.clear();
     canArr.clear();
 }
@@ -316,11 +320,6 @@ void serial::connection(){
     connect(serialPort, &QSerialPort::readyRead, s, [=]{
         manageFunctions();
     });
-
-    tim1->setInterval(10);
-    tim1->start();
-    connect(tim1, &QTimer::timeout, this, [=]{
-    });
 }
 
 //init function for the serial port
@@ -330,7 +329,7 @@ bool serial::init(){
     serialPort = new QSerialPort();
 
     serialPort->setPortName(serialPortSelected);
-    serialPort->setBaudRate(2250000);
+    serialPort->setBaudRate(250000);
     serialPort->setDataBits(QSerialPort::Data8);
     serialPort->setFlowControl(QSerialPort::NoFlowControl);
     serialPort->setParity(QSerialPort::NoParity);
@@ -377,17 +376,12 @@ QVector<double> serial::getPointsData(){
     }
 }
 
-QString serial::getText(){
-    return text;
-}
-
 bool serial::getCanMode(){
     return CAN_MODE;
 }
 
 void serial::setGraphsRequested(QVector<int> reqGrph){
     this->requestedGraphs = reqGrph;
-    updateGraphsNames();
 }
 
 void serial::setCanMode(int value){
@@ -397,16 +391,54 @@ void serial::setCanMode(int value){
     g.restartSequence();
 }
 
-void serial::setPrint_data(QString var){
-    Q_UNUSED(var)
+QStringList serial::getSwitchNames(){
+    return switchNames;
 }
 
-void serial::setText(){
-    text.append(serialData);
+QStringList serial::getSecondarySwitchNames(int index){
+    return secondarySwitchNames.at(index);
+}
 
-    if(text.size() > 500){
-        text.remove(0, serialData.count());
+void serial::setSwitchesState(QVector<int> state){
+    switchesSelections = state;
+}
+
+void serial::setPrimarySwitches(int id, int value){
+    while(switchesSelections.count() < switchNames.count()){
+        switchesSelections.append(0);
     }
+    switchesSelections[id] = value;
+    g.setSecondarySwitchesSelections(graphSelection);
+    updateGraphsNames();
+}
+
+QVector<int> serial::getSecondarySwitchesSelections(int index){
+    if(secondarySwitchSelections.count() <= 0){
+        for(int i = 0; i < secondarySwitchNames.count(); i ++){
+            QVector<int> buff;
+            for(int j = 0; j < secondarySwitchNames.at(i).count(); j++){
+                buff.append(0);
+            }
+            secondarySwitchSelections.append(buff);
+        }
+    }
+    graphSelection.clear();
+    for(int i = 0; i < switchesSelections.count(); i++){
+        if(switchesSelections.at(i) == 1)
+        graphSelection.append(secondarySwitchSelections.at(i));
+    }
+    g.setSecondarySwitchesSelections(graphSelection);
+    return secondarySwitchSelections.at(index);
+}
+void serial::setSecondarySwitchesSelections(int primaryId, int secondaryId, int value){
+    secondarySwitchSelections[primaryId][secondaryId] = value;
+    graphSelection.clear();
+    for(int i = 0; i < switchesSelections.count(); i++){
+        if(switchesSelections.at(i) == 1)
+        graphSelection.append(secondarySwitchSelections.at(i));
+    }
+    g.setSecondarySwitchesSelections(graphSelection);
+    updateGraphsNames();
 }
 
 //enables and disables the real time log
@@ -424,7 +456,7 @@ void serial::setLogState(bool state){
 
         QDir dir;
         dir.setCurrent(dirName);
-        fil->setFileName("log" +
+        fil->setFileName("log " +
                          QDateTime::currentDateTime().date().toString()
                          + " " +
                          QDateTime::currentDateTime().time().toString()
