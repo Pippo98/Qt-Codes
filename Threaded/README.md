@@ -14,14 +14,14 @@ A cpp signal could be emitted only from the class that declasred it.
 
 A signal is a function that can not be implemented, in fact it is only declared and "called" (using emit).
 
-A signal could accept arguments that can be catched from the slot attached to it
+A signal could accept arguments that can be catched from the slot attached to it.
 
 In qml, the only way to acces to the argument carried from the signal is to use the same variable name as in the declaration in the .h file.
 
 
 ### Thread
 
-In this version I used QThread to limitate lags
+In this version I used QThread to limitate lags.
 
 I threaded two functions: 
 
@@ -47,18 +47,20 @@ See my run() functions as examples.
 
 This program manages the graphs from the QtChart library, I implemented GraphChart.qml file.
 
-In the qml file I'm declaring all the LineSeries that then I'm gonna update, in this example I used 20 LineSeries, one X axis and 20 Y axis.
+In the qml file I'm declaring all the LineSeries that then I'm going to update, in this example I used 20 LineSeries, one X axis and 20 Y axis.
 
 
 Every LineSeries need to be attached to one X axis and one Y axis, I used one common X axis and different Y axis to resize the graph.
 
 To update the points from the cpp, I needed to share the pointer of the LineSeries to the cpp file.
 
-The way to use qml pointers in cpp is to use QAbstractSeries and QAbstractAxis (the declaration is in the graph.cpp file)
+The way to use qml pointers in cpp is to use QAbstractSeries and QAbstractAxis (the declaration is in the graph.cpp file).
 
 In the first versions of this program every time a series needed to be updated, a function in cpp file was called from qml passing the pointer of the series.
 
-Then in the actual version once the declaration of all the LineSeries is completed, a function in cpp is called from the qml that passes all the pointers of the series, in cpp a QVector stores all the pointers of all the series and all the axes, so it's not needed anymore to call the updateSeries function from the qml.
+Then in the actual version once the declaration of all the LineSeries is completed, qml calls a cpp function to pass all the pointers of the series.
+
+In cpp a QVector variable stores all the pointers of all the series and all the axes, so until the end of the program The pointers are available in cpp.
 
 
 
