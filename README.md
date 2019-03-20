@@ -51,5 +51,14 @@ In the qml could be changed the argument of the setAxis function to modify the w
 
 In graph.cpp setAxis function is commented to explain how the arguments works
 
+The third page is a send page
+
+Is used to send data to the device connected
+
+The text field will be red if the device is not connected or if the input is wrong
+
+If the application is in CAN mode the input field accepts only numbers from 0 to 255 separated by spaces, eight total
+numbers
+
 
 
