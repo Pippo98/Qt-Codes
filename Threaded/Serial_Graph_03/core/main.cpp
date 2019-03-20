@@ -6,9 +6,9 @@
 #include <QQmlContext>
 #include <QDebug>
 
-#include "graph.h"
-#include "serial.h"
-#include "backend.h"
+#include "../header/graph.h"
+#include "../header/serial.h"
+#include "../header/backend.h"
 
 int main(int argc, char *argv[])
 {
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     ctx->setContextProperty("backend", &_backend);
     ctx->setContextProperty("graph", &_graph);
 
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:qml/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 

@@ -1,46 +1,38 @@
-QT += quick
-QT += charts
-QT += qml
-QT += gui
-QT += core
-QT += serialport
+################################################################################
+#  _________            .__       .__      ________                    .__     #
+# /   _____/ ___________|__|____  |  |    /  _____/___________  ______ |  |__  #
+# \_____  \_/ __ \_  __ \  \__  \ |  |   /   \  __\_  __ \__  \ \____ \|  |  \ #
+# /        \  ___/|  | \/  |/ __ \|  |__ \    \_\  \  | \// __ \|  |_> >   Y  \#
+#/_______  /\___  >__|  |__(____  /____/  \______  /__|  (____  /   __/|___|  /#
+#        \/     \/              \/               \/           \/|__|        \/ #
+################################################################################
+
+
+QT  +=  \
+    quick \
+    charts \
+    qml \
+    gui \
+    core \
+    serialport \
 
 CONFIG += c++11
 
-# The following define makes your compiler emit warnings if you use
-# any feature of Qt which as been marked deprecated (the exact warnings
-# depend on your compiler). Please consult the documentation of the
-# deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-# You can also make your code fail to compile if you use deprecated APIs.
-# In order to do so, uncomment the following line.
-# You can also select to disable deprecated APIs only up to a certain version of Qt.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
-
 SOURCES += \
-        main.cpp \
-    backend.cpp \
-    serial.cpp \
-    graph.cpp
+        core/main.cpp \
+        core/backend.cpp \
+        core/serial.cpp \
+        core/graph.cpp
+
+
+HEADERS += \
+        header/backend.h \
+        header/serial.h \
+        header/graph.h
+
 
 RESOURCES += qml.qrc
 
-#DISTFILES += \
-#    qml/*
 
-# Additional import path used to resolve QML modules in Qt Creator's code model
-QML_IMPORT_PATH =
-
-# Additional import path used to resolve QML modules just for Qt Quick Designer
-QML_DESIGNER_IMPORT_PATH =
-
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
-
-HEADERS += \
-    backend.h \
-    serial.h \
-    graph.h

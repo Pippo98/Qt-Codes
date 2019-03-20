@@ -1,14 +1,14 @@
 <RCC>
     <qresource prefix="/">
-        <file>main.qml</file>
-        <file>Page1Form.qml</file>
-        <file>Page2Form.qml</file>
-        <file>qtquickcontrols2.conf</file>
-        <file>GraphChart.qml</file>
-        <file>ControlPanel.qml</file>
-        <file>Page3Form.qml</file>
-        <file>SwitchPanel.qml</file>
-        <file>SecondarySwitch.qml</file>
-        <file>SecondarySwitch_2.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/Page1Form.qml</file>
+        <file>qml/Page2Form.qml</file>
+        <file>qml/qtquickcontrols2.conf</file>
+        <file>qml/GraphChart.qml</file>
+        <file>qml/ControlPanel.qml</file>
+        <file>qml/Page3Form.qml</file>
+        <file>qml/SwitchPanel.qml</file>
+        <file>qml/SecondarySwitch.qml</file>
+        <file>qml/SecondarySwitch_2.qml</file>
     </qresource>
 </RCC>

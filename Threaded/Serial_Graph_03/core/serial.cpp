@@ -1,6 +1,6 @@
-﻿#include "graph.h"
-#include "serial.h"
-#include "backend.h"
+﻿#include "../header/graph.h"
+#include "../header/serial.h"
+#include "../header/backend.h"
 
 #include <QDir>
 #include <QFile>
@@ -307,7 +307,7 @@ void serial::detectGraphs(){
     average += counter;
     if(iterations == 19){
         average /= 20;
-        average = round(average);
+        //average = round(average);
         g.totalGraphs = int(average);
         doneCalibration = true;
     }

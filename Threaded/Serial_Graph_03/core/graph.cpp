@@ -1,5 +1,5 @@
-#include "serial.h"
-#include "graph.h"
+#include "../header/serial.h"
+#include "../header/graph.h"
 
 #include <QDebug>
 #include <QObject>

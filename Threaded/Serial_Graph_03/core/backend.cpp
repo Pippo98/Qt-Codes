@@ -1,6 +1,6 @@
-#include "backend.h"
-#include "serial.h"
-#include "graph.h"
+#include "../header/backend.h"
+#include "../header/serial.h"
+#include "../header/graph.h"
 
 #include <QQuickView>
 
