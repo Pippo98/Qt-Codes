@@ -3,6 +3,7 @@
 # Serial Graph Plotter
 
 ## Description
+
 This is an application able to plot multiple graphs
 
 The way it gets the data is via serial port
@@ -17,6 +18,7 @@ The lines must have the same quantity of numbers
 The application has two modality: CAN mode and normal mode
 
 ### CAN mode
+
 CAN mode need to receive a CAN message including the id and preceded by the timestamp of the message
 
 In the code can be managed the ids of the messages to plot the data carried in the payload
@@ -30,13 +32,16 @@ Normal mode autodetects how many numbers there are in one message, that must not
 This means that if in the first message there are 5 numbers, the applications search only for 5 numbers
 
 ### Logging
-Activating the 'Log enable' switch tll the data received in the serial port can be saved in a file
+
+Activating the 'Log enable' switch the data received in the serial port can be saved in a file
+
 The path of the directory must be changed
-There variable in serial.cpp file named dir contains the path
+
+There is a variable in serial.cpp file named "dir", contains the path
 
 ### Others informations
-In the Chart Page there is a slider that changes the number of points present in one line
 
+In the Chart Page there is a slider that changes the number of points present in one line
 
 The axis rescaling is managed with a timer in the Graph Chart file
 
