@@ -30,6 +30,9 @@ void backend::comboChanged(QString active_member, int index, int identifier){
         s.serialPortIndex = index;
         s.serialPortSelected = active_member;
         break;
+    case 1:
+        s.serialPortBaudrate = active_member.toInt();
+        break;
     }
 }
 
@@ -37,15 +40,13 @@ void backend::buttonClicked(int id, int value){
     switch (id) {
     case 0:
         if(value == 0){
-            s.init();
+            emit portStateChanged(s.init());
             s.connection();
             g.connections();
-            emit portStateChanged(1);
         }
         else{
-            s.deInit();
+            emit portStateChanged(s.deInit());
             g.deInit();
-            emit portStateChanged(0);
         }
         break;
     default:

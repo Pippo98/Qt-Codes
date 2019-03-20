@@ -33,13 +33,14 @@ public:
     void run() override;
 
 public slots:
+    void setAxis(int, int);
+    void updateSeries();
     void setGeneralYRange();
     void setSpecificYRange();
     void getAxisValues(QAbstractAxis *, int, int, int);
     void setSeriesArray(QAbstractSeries *, QAbstractAxis *, QAbstractAxis *);
-    void updateSeries();
-    void setAxis(int, int);
     void setSecondaryGraphSelection(QVector<int>);
+    void setFrameRate(int);
 
 signals:
     void graphChanged();

@@ -9,5 +9,6 @@
         <file>Page3Form.qml</file>
         <file>SwitchPanel.qml</file>
         <file>SecondarySwitch.qml</file>
+        <file>SecondarySwitch_2.qml</file>
     </qresource>
 </RCC>

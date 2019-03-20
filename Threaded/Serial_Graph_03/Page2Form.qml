@@ -6,6 +6,7 @@ Page {
 
     header: Label {
         text: "Graphs"
+        horizontalAlignment: Text.AlignHCenter
         font.pixelSize: Qt.application.font.pixelSize * 2
         padding: 10
     }
@@ -25,17 +26,30 @@ Page {
     }
 
     Slider{
-        id: frameRateSlider2
+        id: resizeAxisRate
         from: 100
         to: 1500
         value: 500
         anchors.left: pointsSlider1.right
         onValueChanged:{
             chart1.resizeInterval = Number(value)
-            console.log(chart1.resizeInterval)
         }
         Text{
             text: "Y Axis Resizing Timer"
+            color: "lightGray"
+            anchors.horizontalCenter: parent.horizontalCenter
+        }
+    }
+
+    Slider{
+        id: frameRate
+        from: 17
+        to: 41
+        value: 20
+        anchors.left: resizeAxisRate.right
+        onValueChanged: graph.setFrameRate(value)
+        Text{
+            text: "Frame Rate " + (1000/frameRate.value).toPrecision(2)
             color: "lightGray"
             anchors.horizontalCenter: parent.horizontalCenter
         }

@@ -14,8 +14,9 @@ ApplicationWindow {
 
         Page1Form {
         }
-
         Page2Form {
+        }
+        Page3Form{
         }
     }
 
@@ -28,6 +29,9 @@ ApplicationWindow {
         }
         TabButton {
             text: "Graphs"
+        }
+        TabButton {
+            text: "Send Page"
         }
     }
 }

@@ -19,16 +19,6 @@ ChartView {
         }
     }
 
-    Timer {
-        interval: 1 / 200 * 1000
-        running: true
-        repeat: true
-        onTriggered: {
-            //graph.updateSeries()
-            graph.setAxis(0, 0)
-        }
-    }
-
     Timer{
         id: resizeTimer
         interval: resizeInterval

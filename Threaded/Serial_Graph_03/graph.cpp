@@ -16,8 +16,6 @@ Q_DECLARE_METATYPE(QAbstractSeries *)
 Q_DECLARE_METATYPE(QAbstractAxis *)
 
 static QTimer *tim1 = new QTimer();
-static QTimer *tim2 = new QTimer();
-static QTimer *tim3 = new QTimer();
 static QTime  *Time = new QTime();
 
 static QVector<QXYSeries *> castedSeriesArray;
@@ -41,6 +39,9 @@ static int yMaxIndexes[1000];
 static int yMinIndexes[1000];
 
 static bool update;
+static bool threadActive = true;
+
+static int frameRate = 20;
 
 static serial s;
 static backend b;
@@ -52,8 +53,9 @@ graph::graph(QObject * parent) : QThread (parent)
     qRegisterMetaType<QAbstractAxis*>();
 }
 
+//Deconstructor
 graph::~graph(){
-    this->terminate();
+    threadActive = false;
     this->exit();
 }
 
@@ -79,7 +81,7 @@ void graph::managePoints(QVector<double> data){
 //appends to the array all the pointers to the line series of the qml chart
 void graph::setSeriesArray(QAbstractSeries * ser, QAbstractAxis * axisX, QAbstractAxis * axisY){
     if(ser)
-    castedSeriesArray.append(static_cast<QXYSeries *>(ser));
+    castedSeriesArray.append(dynamic_cast<QXYSeries *>(ser));
     if(axisX && axisY)
     axisArray.append(qMakePair(axisX, axisY));
 }
@@ -112,10 +114,12 @@ void graph::updateSeries(){
     }
 }
 
+//thread function
+//only if new data are available update the line series in the qml chart using the pointers
 void graph::run(){
-    while (1) {
+    while (threadActive) {
         mute.lock();
-        if(isSerialOpened && dataArray.count() > 0 && update == true){
+        if(isSerialOpened && dataArray.count() > 0 && update){
             for(int i = 0; i < castedSeriesArray.count(); i++){
                 if(i < pointsList.count() && i < dataArray.count()){
                     castedSeriesArray.at(i)->replace(pointsList.at(i));
@@ -127,6 +131,7 @@ void graph::run(){
                             castedSeriesArray.at(i)->setName(graphsNames.at(i));
                         }
                     }
+                    setAxis(0, 0);
                 }
                 else{
                     if(castedSeriesArray.at(i)->isVisible()){
@@ -140,7 +145,7 @@ void graph::run(){
             update = false;
         }
         mute.unlock();
-        this->msleep(20);
+        this->msleep(u_int64_t(frameRate));
     }
 }
 
@@ -271,7 +276,7 @@ void graph::getAxisValues(QAbstractAxis * axis, int index, int x_y, int single_t
     }
 }
 
-//INIT-DEINIT Functions
+//--------------------------------------INIT-DEINIT Functions--------------------------------------//
 void graph::deInit(){
     disconnect(tim1, &QTimer::timeout, nullptr, nullptr);
 }
@@ -293,7 +298,7 @@ void graph::connections(){
     });
 }
 
-//SET-GET Functions
+//--------------------------------------SET-GET Functions--------------------------------------//
 
 void graph::setSecondarySwitchesSelections(QVector<int> value){
     secondaryGaphSelection = value;
@@ -317,6 +322,10 @@ void graph::setGraphsNames(QList<QString> names){
 
 void graph::setMaxPoints(int maxP){
     maxPoints = maxP;
+}
+
+void graph::setFrameRate(int value){
+    frameRate = value;
 }
 
 

@@ -5,6 +5,15 @@ import QtQuick.Controls.Styles 1.4
 
 Item {
     id: item1
+
+    Connections{
+        target: backend
+        onPortStateChanged:{
+            button.currentSelection = state
+            console.log("onPortStateChanged: " + state)
+        }
+    }
+
     Column {
         id: column
         ComboBox {
@@ -31,6 +40,25 @@ Item {
             }
         }
 
+        ComboBox{
+            id: comboBox1
+
+            property variant members
+            property int currentSelection: 0
+            property int identfier: 1
+
+            model: ["", "9600", "115200", "225000", "2225000"]
+            anchors.left: parent.left
+            anchors.leftMargin: 10
+            currentIndex: 4
+            onActivated: {
+                backend.comboChanged(currentText, currentIndex, identfier)
+            }
+            Component.onCompleted: {
+                backend.comboChanged(currentText, currentIndex, identfier)
+            }
+        }
+
         TextArea {
             id: textArea
             height: 100
@@ -45,15 +73,23 @@ Item {
         Button {
             id: button
 
-            property variant items: ["Close", "Open"]
-            property int currentSelection: 1
+            property variant items: ["Closed", "Opened"]
+            property string red: "<font color='red'>"
+            property string green: "<font color='green'>"
+            property int currentSelection: 0
             property int identifier: 0
 
             anchors.left: parent.left
             anchors.leftMargin: 10
-            text: items[currentSelection]
+            text: {
+                if(currentSelection){
+                    green + items[currentSelection]
+                }
+                else{
+                    red + items[currentSelection]
+                }
+            }
             onClicked: {
-                currentSelection = (currentSelection + 1) % items.length
                 backend.buttonClicked(identifier, currentSelection)
             }
         }

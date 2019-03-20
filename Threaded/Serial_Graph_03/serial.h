@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QtSerialPort/QSerialPort>
 #include <QVector>
+#include <QQmlProperty>
+#include <QQmlEngine>
 
 #include <QThread>
 
@@ -16,9 +18,7 @@ public:
     explicit serial(QObject *parent = nullptr);
     ~serial() override;
 
-    QVector<double> getPointsData();
-
-    void deInit();
+    bool deInit();
     void parseCan();
     void parseData();
     void connection();
@@ -30,14 +30,19 @@ public:
     bool init();
     bool isSerialOpened();
 
-    void setSwitchesState(QVector<int>);
-
-
+    //function used for the thread
     void run() override;
 
-signals:
-    void dataChanged(QString data);
-    void portStateChanged(int state);
+public:
+    int baudRateSelected;
+    int serialPortIndex;
+    int serialPortBaudrate;
+
+    QVector<int> requestedGraphs;
+
+    QString serialPortSelected;
+    //QSerialPort * serialPort;
+    QStringList serialPorts;
 
 public slots:
     QStringList detectPort();
@@ -48,21 +53,16 @@ public slots:
     void setSecondarySwitchesSelections(int, int, int);
     void setPrimarySwitches(int, int);
 
+    void sendCommand(QString);
 
     bool getCanMode();
     void setCanMode(int);
     void manageFunctions();
-    void setGraphsRequested(QVector<int>);
+    void initTextArea(QObject *);
+    void initTextField(QObject *);
 
-public:
-    int baudRateSelected;
-    int serialPortIndex;
-
-    QVector<int> requestedGraphs;
-
-    QString serialPortSelected;
-    QSerialPort * serialPort;
-    QStringList serialPorts;
+signals:
+    void dataChanged(QString data);
 };
 
 #endif // SERIAL_H
