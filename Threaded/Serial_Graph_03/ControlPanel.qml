@@ -112,5 +112,16 @@ Item {
                 switchPanel.visible = checked
             }
         }
+        Button{
+            id: infoButton
+
+            property int identifier: 2
+            property int currentSelection: 0
+
+            text: "Help"
+            onClicked: {
+                backend.buttonClicked(identifier, currentSelection)
+            }
+        }
     }
 }

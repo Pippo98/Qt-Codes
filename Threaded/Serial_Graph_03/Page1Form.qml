@@ -32,4 +32,17 @@ Page {
         anchors.left: controlPanel.right
         anchors.top : parent.top
     }
+    TextArea{
+        id: infoArea
+        anchors.right: parent.right
+        anchors.top: parent.top
+
+        property string displayableText
+
+        text: displayableText
+
+        Component.onCompleted: {
+            serial.initInfoTextArea(infoArea)
+        }
+    }
 }

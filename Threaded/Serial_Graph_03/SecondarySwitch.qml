@@ -17,16 +17,8 @@ Item {
             model: switchesNames.length
             Switch{
                 id: sw
-                text: {
-
-                    if(index < switchesNames.length){
-                        switchesNames[index]
-                    }
-                    else{
-                        "codsvkofpd"
-                    }
-
-                }
+                text:
+                    switchesNames[index]
                 checked: selections[index] | false
                 onCheckedChanged: {
                     serial.setSecondarySwitchesSelections(parentIindex, index, checked)

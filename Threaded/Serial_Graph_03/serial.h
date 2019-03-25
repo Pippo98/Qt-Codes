@@ -30,6 +30,8 @@ public:
     bool init();
     bool isSerialOpened();
 
+    void displayHelp();
+
     //function used for the thread
     void run() override;
 
@@ -60,6 +62,9 @@ public slots:
     void manageFunctions();
     void initTextArea(QObject *);
     void initTextField(QObject *);
+    void initInfoTextArea(QObject *);
+
+    void displayPerformanceInfo();
 
 signals:
     void dataChanged(QString data);

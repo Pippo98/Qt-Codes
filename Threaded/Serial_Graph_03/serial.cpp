@@ -13,6 +13,8 @@
 #include <QThread>
 #include <QMutex>
 
+#include <QMessageBox>
+
 static QFile *fil = new QFile();
 static QTimer *tim1 = new QTimer();
 static QMutex mute;
@@ -54,7 +56,10 @@ static bool logState = false;
 
 static QObject * textArea;
 static QObject * textField;
+static QObject * infoTextArea;
 static QList<QByteArray> terminalText;
+
+static int messagesCounter = 0;
 
 static bool newData;
 static bool isPortOpened;
@@ -149,6 +154,7 @@ void serial::run(){
                 detectGraphs();
             }
             if(doneCalibration || CAN_MODE){
+                //qDebug() << "0000000";
                 parseData();
 
                 if(CAN_MODE){
@@ -158,6 +164,7 @@ void serial::run(){
                 else{
                     g.managePoints(dataArray);
                 }
+                //qDebug() << "1111111";
             }
             newData = false;
         }
@@ -171,6 +178,7 @@ void serial::manageFunctions(){
         serialData = serialPort->readLine();
         if(logState)
         fil->write(serialData);
+        messagesCounter ++;
         //qDebug() << serialData;
     }
     newData = true;
@@ -178,8 +186,9 @@ void serial::manageFunctions(){
 
 //differentiate the data from different id
 void serial::parseCan(){
-    canArr.clear();
-    textArea->setProperty("line3", serialData);
+    //textArea->setProperty("line3", serialData);
+
+    //Check if the CAN message is correct
     if(dataArray.count() >= 8){
         //PEADLS
         if(int(dataArray[1]) == 176){
@@ -215,17 +224,20 @@ void serial::parseCan(){
         }
         if(int(dataArray[1]) == 208){
             if(int(dataArray[2]) == 6){
-                textArea->setProperty("line1", serialData);           //setting the text in the thirt page
+                //textArea->setProperty("line1", serialData);           //setting the text in the third page
                 frontal.encoder1 = dataArray[3];
             }
             if(int(dataArray[2]) == 7){
-                textArea->setProperty("line2", serialData);           //setting the text in the thirt page
+                //textArea->setProperty("line2", serialData);           //setting the text in the third page
                 frontal.encoder2 = dataArray[3];
             }
         }
     }
 
     if(switchesSelections.count() > 2){
+
+        canArr.clear();
+
         //FRONTAL
         if(switchesSelections.at(0) == 1){
             canArr.append(frontal.encoder1);
@@ -260,6 +272,7 @@ void serial::parseCan(){
         if(switchesSelections.at(5) == 1){
 
         }*/
+
         QVector<double> buff;
         for(int i = 0; i < graphSelection.count(); i++){
             if(graphSelection.at(i) == 1 && i < canArr.count())
@@ -272,9 +285,7 @@ void serial::parseCan(){
 //function to get all the numbers in the buffer received
 void serial::parseData(){
 
-    QList<QByteArray> dataSplitted;
-
-    dataSplitted = serialData.split('\t');
+    QList<QByteArray> dataSplitted = serialData.split('\t');
 
     //if the numbers found in the received string are te same number ad the average found then do the cast fo float
     if(dataSplitted.count() == g.totalGraphs || CAN_MODE){
@@ -283,12 +294,12 @@ void serial::parseData(){
                 dataArray.append(dataSplitted[i].toDouble());
             }
             else{
-                dataArray.replace(i, dataSplitted[i].toDouble());
+                dataArray[i] = dataSplitted[i].toDouble();
             }
         }
     }
     else{
-        qDebug() << "wrong";
+        qDebug() << "Detect Graphs Number Failed";
     }
 }
 
@@ -393,12 +404,19 @@ bool serial::init(){
     serialPort->setParity(QSerialPort::NoParity);
 
     if(serialPort->open(QSerialPort::ReadWrite)){
+        tim1->setInterval(1000);
+        tim1->start();
+        QObject::connect(tim1, SIGNAL(timeout()), SLOT(displayPerformanceInfo()));
         qDebug() << "Serial Port Opened";
         result = true;
     }
     else{
         qDebug() << "Cannot Open Serial Port";
         result = false;
+        QMessageBox msgBox;
+        msgBox.setText("Port NOT opened, check port name and baudrate");
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.exec();
     }
     isPortOpened = result;
     g.setIsSerialOpened(isPortOpened);
@@ -428,6 +446,21 @@ bool serial::deInit(){
     return result;
 }
 
+void serial::displayHelp(){
+    QMessageBox msgBox;
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setText("Select port name, baudrate, click the Closed button to open the port\n"
+                   "log button enables the log of the received data, to select the directory check dirName varialbe in serial.cpp file\n"
+                   "CAN mode if you want to plot the CAN data, else you can plot raw data: same numbers of data in all the messages, numbers separated by \\t and the line end with \\r\\n");
+    msgBox.exec();
+}
+
+void serial::displayPerformanceInfo(){
+    QString txt = "messages per second: " + QString::number(messagesCounter);
+    messagesCounter = 0;
+    infoTextArea->setProperty("displayableText", txt);
+}
+
 //--------------------------------------SET-GET Functions--------------------------------------//
 
 void serial::initTextArea(QObject * obj){
@@ -436,6 +469,10 @@ void serial::initTextArea(QObject * obj){
 
 void serial::initTextField(QObject * obj){
     textField = obj;
+}
+
+void serial::initInfoTextArea(QObject * obj){
+    infoTextArea = obj;
 }
 
 void serial::sendCommand(QString data){
@@ -544,6 +581,9 @@ QVector<int> serial::getSecondarySwitchesSelections(int index){
 void serial::setSecondarySwitchesSelections(int primaryId, int secondaryId, int value){
     if(primaryId < secondarySwitchSelections.length() && secondaryId < secondarySwitchSelections.at(primaryId).length()){
         secondarySwitchSelections[primaryId][secondaryId] = value;
+    }
+    else{
+        qDebug() << "wrong indexes";
     }
     graphSelection.clear();
     for(int i = 0; i < switchesSelections.count(); i++){

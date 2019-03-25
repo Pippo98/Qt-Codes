@@ -49,6 +49,9 @@ void backend::buttonClicked(int id, int value){
             g.deInit();
         }
         break;
+    case 2:
+        s.displayHelp();
+        break;
     default:
         break;
 

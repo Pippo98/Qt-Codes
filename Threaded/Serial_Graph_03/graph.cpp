@@ -43,6 +43,9 @@ static bool threadActive = true;
 
 static int frameRate = 20;
 
+static QElapsedTimer timer;
+static qint64 nanoSec;
+
 static serial s;
 static backend b;
 static QMutex mute;
@@ -70,8 +73,9 @@ void graph::managePoints(QVector<double> data){
 
     for(int i = 0; i < dataArray.count(); i++){
         pointsList[i].append(QPointF(x, dataArray[i]));
-        while(pointsList.at(i).count() > maxPoints){
-            pointsList[i].remove(0);
+        int excessPoints = pointsList.at(i).count() - maxPoints;
+        if(excessPoints > 0){
+            pointsList[i].remove(0,excessPoints);
         }
     }
 
@@ -119,7 +123,7 @@ void graph::updateSeries(){
 void graph::run(){
     while (threadActive) {
         mute.lock();
-        if(isSerialOpened && dataArray.count() > 0 && update){
+        if(update && isSerialOpened && dataArray.count() > 0){
             for(int i = 0; i < castedSeriesArray.count(); i++){
                 if(i < pointsList.count() && i < dataArray.count()){
                     castedSeriesArray.at(i)->replace(pointsList.at(i));
@@ -131,7 +135,10 @@ void graph::run(){
                             castedSeriesArray.at(i)->setName(graphsNames.at(i));
                         }
                     }
+                    timer.start();
                     setAxis(0, 0);
+                    nanoSec = timer.nsecsElapsed();
+                    //qDebug() << nanoSec;
                 }
                 else{
                     if(castedSeriesArray.at(i)->isVisible()){
@@ -201,8 +208,12 @@ void graph::setGeneralYRange(){
 void graph::setAxis(int x_y, int single_total){
 
     if(x_y == 1){
-        setGeneralYRange();
-        setSpecificYRange();
+        if(single_total){
+            setGeneralYRange();
+        }
+        else{
+            setSpecificYRange();
+        }
     }
 
     for(int i = 0; i < axisArray.count(); i++){
@@ -210,30 +221,39 @@ void graph::setAxis(int x_y, int single_total){
             if(single_total == 0){
                 if(x_y == 0){                                                           //X axis
                     axisArray.at(i).first->setMin(pointsList.at(i).first().x());
-                    axisArray.at(i).first->setMax(pointsList.at(i).last().x());
+                    axisArray.at(i).first->setMax(pointsList.at(i).last ().x());
                 }
                 if(x_y == 1){                                                           //Y axis
                     double max;
                     double min;
 
-                    min = pointsList.at(i).at(yMinIndexes[i]).y();
-                    max = pointsList.at(i).at(yMaxIndexes[i]).y();
+                    min = abs(pointsList.at(i).at(yMinIndexes[i]).y());
+                    max = abs(pointsList.at(i).at(yMaxIndexes[i]).y());
 
-                    axisArray.at(i).second->setMin(min * 1.1);
-                    axisArray.at(i).second->setMax(max * 1.1);
+                    if(min < max){
+                        axisArray.at(i).second->setMax(max * 1.1);
+                        axisArray.at(i).second->setMin(-max * 1.1);
+                    }
+                    else{
+                        axisArray.at(i).second->setMax(min * 1.1);
+                        axisArray.at(i).second->setMin(-min * 1.1);
+                    }
                 }
             }
             //same range for all the grahs in the chart
             if(single_total == 1){
                 if(x_y == 0){                                                           //X axis
-                    axisArray.at(i).first->setMin(pointsList.at(0).at(0).x());
-                    axisArray.at(i).first->setMax(pointsList.at(0).at(pointsList.at(0).count()-1).x());
+                    axisArray.at(i).first->setMin(pointsList.at(0).first().x());
+                    axisArray.at(i).first->setMax(pointsList.at(0).last ().x());
                 }
                 if(x_y == 1){                                                           //Y axis
                     axisArray.at(i).second->setMin(pointsList.at(minIndexes[0]).at(minIndexes[1]).y());
                     axisArray.at(i).second->setMax(pointsList.at(maxIndexes[0]).at(maxIndexes[1]).y());
                 }
             }
+        }
+        else{
+            break;
         }
     }
 }

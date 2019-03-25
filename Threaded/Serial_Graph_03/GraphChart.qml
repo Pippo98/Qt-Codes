@@ -176,15 +176,7 @@ ChartView {
         color: "red"
         axisX: axisX
         axisY: axisY1
-        MouseArea{
-            anchors.fill: parent
-            onHoveredChanged: {
-                console.log("cdscdmkmdkm")
-            }
-            onContainsMouseChanged: {
-                console.log("cdscdmkmdkm")
-            }
-        }
+        visible: false
     }
 
     LineSeries {
@@ -193,6 +185,7 @@ ChartView {
         color: "green"
         axisX: axisX
         axisY: axisY2
+        visible: false
     }
     LineSeries {
         id: lineSeries3
@@ -200,7 +193,7 @@ ChartView {
         color: "blue"
         axisX: axisX
         axisY: axisY3
-
+        visible: false
     }
     LineSeries {
         id: lineSeries4
@@ -208,7 +201,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY4
-
+        visible: false
     }
     LineSeries {
         id: lineSeries5
@@ -216,7 +209,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY5
-
+        visible: false
     }
     LineSeries {
         id: lineSeries6
@@ -224,6 +217,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY6
+        visible: false
     }
     LineSeries {
         id: lineSeries7
@@ -231,6 +225,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY7
+        visible: false
     }
     LineSeries {
         id: lineSeries8
@@ -238,6 +233,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY8
+        visible: false
     }
     LineSeries {
         id: lineSeries9
@@ -245,6 +241,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY9
+        visible: false
     }
     LineSeries {
         id: lineSeries10
@@ -252,6 +249,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY10
+        visible: false
     }
 
     LineSeries {
@@ -260,6 +258,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY11
+        visible: false
     }
     LineSeries {
         id: lineSeries12
@@ -267,6 +266,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY12
+        visible: false
     }
     LineSeries {
         id: lineSeries13
@@ -274,6 +274,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY13
+        visible: false
     }
     LineSeries {
         id: lineSeries14
@@ -281,6 +282,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY14
+        visible: false
     }
     LineSeries {
         id: lineSeries15
@@ -288,6 +290,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY15
+        visible: false
     }
     LineSeries {
         id: lineSeries16
@@ -295,6 +298,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY16
+        visible: false
     }
     LineSeries {
         id: lineSeries17
@@ -302,6 +306,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY17
+        visible: false
     }
     LineSeries {
         id: lineSeries18
@@ -309,6 +314,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY18
+        visible: false
     }
     LineSeries {
         id: lineSeries19
@@ -316,6 +322,7 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY19
+        visible: false
     }
     LineSeries {
         id: lineSeries20
@@ -323,5 +330,6 @@ ChartView {
         color: "black"
         axisX: axisX
         axisY: axisY20
+        visible: false
     }
 }
