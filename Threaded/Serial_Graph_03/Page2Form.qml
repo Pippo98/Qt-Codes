@@ -45,7 +45,7 @@ Page {
         id: frameRate
         from: 17
         to: 41
-        value: 20
+        value: 40
         anchors.left: resizeAxisRate.right
         onValueChanged: graph.setFrameRate(value)
         Text{

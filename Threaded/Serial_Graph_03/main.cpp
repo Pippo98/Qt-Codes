@@ -23,8 +23,8 @@ int main(int argc, char *argv[])
     serial  _serial;
     graph   _graph;
 
-    _serial.start();
-    _graph.start();
+    _serial.start(QThread::Priority::HighestPriority);
+    _graph.start(QThread::Priority::HighPriority);
 
     ctx->setContextProperty("serial", &_serial);
     ctx->setContextProperty("backend", &_backend);

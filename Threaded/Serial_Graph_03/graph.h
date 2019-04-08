@@ -28,7 +28,6 @@ public:
     void setIsSerialOpened(bool);
     void managePoints(QVector<double>);
     void setGraphsNames(QList<QString>);
-    void setSecondarySwitchesSelections(QVector<int>);
 
     void run() override;
 
@@ -39,7 +38,6 @@ public slots:
     void setSpecificYRange();
     void getAxisValues(QAbstractAxis *, int, int, int);
     void setSeriesArray(QAbstractSeries *, QAbstractAxis *, QAbstractAxis *);
-    void setSecondaryGraphSelection(QVector<int>);
     void setFrameRate(int);
 
 signals:

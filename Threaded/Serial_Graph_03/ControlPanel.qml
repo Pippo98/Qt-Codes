@@ -1,6 +1,6 @@
-import QtQuick 2.11
+import QtQuick 2.0
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.0
 import QtQuick.Controls.Styles 1.4
 
 Item {
@@ -10,7 +10,6 @@ Item {
         target: backend
         onPortStateChanged:{
             button.currentSelection = state
-            console.log("onPortStateChanged: " + state)
         }
     }
 
@@ -98,8 +97,9 @@ Item {
             id: logSwitch
             checked: false
             text: "Log Enable"
+            property int identifier: 0
             onCheckedChanged: {
-                backend.logSwitchChanged(checked);
+                backend.switchChanged(identifier, checked);
             }
         }
 
@@ -107,8 +107,9 @@ Item {
             id: canModeSwitch
             checked: true
             text: "CAN Mode"
+            property int identifier: 1
             onCheckedChanged: {
-                serial.setCanMode(checked)
+                backend.switchChanged(identifier, checked);
                 switchPanel.visible = checked
             }
         }

@@ -19,6 +19,7 @@ public slots:
     void buttonClicked(int, int);
     void sliderChanged(int, int);
     void comboChanged(QString, int, int);
+    void switchChanged(int, int);
 };
 
 #endif // BACKEND_H

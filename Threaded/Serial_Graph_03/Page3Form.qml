@@ -27,6 +27,29 @@ Page {
             radius: height / 2
             color: propColor
 
+                TextInput{
+                    id: input
+
+                    anchors.fill: inputField
+                    anchors.leftMargin: 20
+                    anchors.topMargin: 5
+
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                    maximumLength: 3
+
+                    inputMethodHints: {
+                        Qt.ImhFormattedNumbersOnly
+                        //Qt.ImhExclusiveInputMask
+                    }
+                    onEditingFinished: {
+                        if(acceptableInput)
+                            console.log(text)
+                    }
+                }
+
+            /*
             TextInput{
                 id: input
 
@@ -46,7 +69,7 @@ Page {
                 Component.onCompleted: {
                     serial.initTextField(inputField)
                 }
-            }
+            }*/
         }
 
         TextArea{
@@ -59,18 +82,23 @@ Page {
 
             readOnly: false
 
+            property string displaybleText: ""
+/*
             property string line1: ""
             property string line2: ""
             property string line3: ""
             property string line4: ""
             property string line5: ""
-            property string line6: ""
+            property string line6: ""*/
 
             Component.onCompleted: {
                 serial.initTextArea(textBox)
             }
 
-            text: line1+line2+line3+line4+line5+line6
+            //text: line1+line2+line3+line4+line5+line6
+            font.pointSize: 10
+            color: "#10e5d7"
+            text: "timestamp\tid\tpay0\tpay1\tpay2\tpay3\tpay4\tpay5\tpay6\tpay7\r\n"+displaybleText
         }
 
         function setQmlText(txt){

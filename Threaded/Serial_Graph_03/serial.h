@@ -26,6 +26,7 @@ public:
     void setLogState(bool);
     void updateGraphsNames();
     void restartSequence();
+    void canSniffer();
 
     bool init();
     bool isSerialOpened();

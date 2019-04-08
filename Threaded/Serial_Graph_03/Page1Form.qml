@@ -1,7 +1,7 @@
-import QtQuick 2.11
+import QtQuick 2.0
 import QtCharts 2.0
 import QtQuick.Layouts 1.3
-import QtQuick.Controls 2.4
+import QtQuick.Controls 2.0
 import QtQuick.Controls.Styles 1.4
 
 Page {
@@ -12,8 +12,7 @@ Page {
     header: Label {
         id: header
         text: "Control Panel"
-        horizontalAlignment: Text.AlignHCenter
-        //fontSizeMode: Text.FixedSize
+        horizontalAlignment: Text.AlignHCenters
         font.pixelSize: Qt.application.font.pixelSize * 2
         padding: 10
     }
@@ -32,6 +31,7 @@ Page {
         anchors.left: controlPanel.right
         anchors.top : parent.top
     }
+
     TextArea{
         id: infoArea
         anchors.right: parent.right

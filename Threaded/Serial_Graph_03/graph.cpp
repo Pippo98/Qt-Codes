@@ -26,7 +26,6 @@ static double x;
 static QList<QString> graphsNames;
 static QList<QVector<QPointF>> pointsList;
 static QVector<double> dataArray;
-static QVector<int> secondaryGaphSelection;
 
 static int maxPoints;
 
@@ -48,7 +47,7 @@ static qint64 nanoSec;
 
 static serial s;
 static backend b;
-static QMutex mute;
+static QMutex mute(QMutex::Recursive);
 
 graph::graph(QObject * parent) : QThread (parent)
 {
@@ -64,22 +63,31 @@ graph::~graph(){
 
 //adds the received point to the points list
 void graph::managePoints(QVector<double> data){
-    dataArray = data;
+    if(mute.try_lock()){
+        dataArray = data;
 
-    while(pointsList.count() < 20){
-        QVector<QPointF> points;
-        pointsList.append(points);
-    }
-
-    for(int i = 0; i < dataArray.count(); i++){
-        pointsList[i].append(QPointF(x, dataArray[i]));
-        int excessPoints = pointsList.at(i).count() - maxPoints;
-        if(excessPoints > 0){
-            pointsList[i].remove(0,excessPoints);
+        timer.start();
+        while(pointsList.count() < 20){
+            QVector<QPointF> points;
+            pointsList.append(points);
         }
-    }
+        nanoSec = timer.nsecsElapsed();
+        //qDebug() << nanoSec;
 
-    update = true;
+        for(int i = 0; i < dataArray.count(); i++){
+            pointsList[i].append(QPointF(x, dataArray[i]));
+            int excessPoints = pointsList.at(i).count() - maxPoints;
+            if(excessPoints > 0){
+                pointsList[i].remove(0,excessPoints);
+            }
+        }
+
+        update = true;
+        mute.unlock();
+    }
+    else{
+        qDebug() << "lock failed -> graph -> managePoints()";
+    }
 }
 
 //appends to the array all the pointers to the line series of the qml chart
@@ -122,37 +130,38 @@ void graph::updateSeries(){
 //only if new data are available update the line series in the qml chart using the pointers
 void graph::run(){
     while (threadActive) {
-        mute.lock();
-        if(update && isSerialOpened && dataArray.count() > 0){
-            for(int i = 0; i < castedSeriesArray.count(); i++){
-                if(i < pointsList.count() && i < dataArray.count()){
-                    castedSeriesArray.at(i)->replace(pointsList.at(i));
-                    if(!castedSeriesArray.at(i)->isVisible()){
-                        castedSeriesArray.at(i)->setVisible(true);
-                    }
-                    if(CAN_MODE){
-                        if(i < graphsNames.count() && graphsNames.at(i) != castedSeriesArray.at(i)->name()){
-                            castedSeriesArray.at(i)->setName(graphsNames.at(i));
+        if(mute.try_lock()){
+            if(update && isSerialOpened && dataArray.count() > 0){
+                for(int i = 0; i < castedSeriesArray.count(); i++){
+                    if(i < pointsList.count() && i < dataArray.count()){
+                        castedSeriesArray.at(i)->replace(pointsList.at(i));
+                        if(!castedSeriesArray.at(i)->isVisible()){
+                            castedSeriesArray.at(i)->setVisible(true);
                         }
-                    }
-                    timer.start();
-                    setAxis(0, 0);
-                    nanoSec = timer.nsecsElapsed();
-                    //qDebug() << nanoSec;
-                }
-                else{
-                    if(castedSeriesArray.at(i)->isVisible()){
-                        castedSeriesArray.at(i)->setVisible(false);
+                        if(CAN_MODE){
+                            if(i < graphsNames.count() && graphsNames.at(i) != castedSeriesArray.at(i)->name()){
+                                castedSeriesArray.at(i)->setName(graphsNames.at(i));
+                            }
+                        }
+                        setAxis(0, 0);
                     }
                     else{
-                        break;
+                        if(castedSeriesArray.at(i)->isVisible()){
+                            castedSeriesArray.at(i)->setVisible(false);
+                        }
+                        else{
+                            break;
+                        }
                     }
                 }
+                update = false;
             }
-            update = false;
+            mute.unlock();
+            this->msleep(u_int64_t(frameRate));
         }
-        mute.unlock();
-        this->msleep(u_int64_t(frameRate));
+        else{
+            qDebug() << "lock failed -> graph -> run()";
+        }
     }
 }
 
@@ -206,7 +215,6 @@ void graph::setGeneralYRange(){
 //single_total is needed to know if the range will be common to all the graphs in the chart or
 //if every signle graph will have his own range (common range -> single_total = 1 ||||| different ranges -> single_total = 0)
 void graph::setAxis(int x_y, int single_total){
-
     if(x_y == 1){
         if(single_total){
             setGeneralYRange();
@@ -227,8 +235,8 @@ void graph::setAxis(int x_y, int single_total){
                     double max;
                     double min;
 
-                    min = abs(pointsList.at(i).at(yMinIndexes[i]).y());
-                    max = abs(pointsList.at(i).at(yMaxIndexes[i]).y());
+                    min = abs(int(pointsList.at(i).at(yMinIndexes[i]).y()));
+                    max = abs(int(pointsList.at(i).at(yMaxIndexes[i]).y()));
 
                     if(min < max){
                         axisArray.at(i).second->setMax(max * 1.1);
@@ -319,14 +327,6 @@ void graph::connections(){
 }
 
 //--------------------------------------SET-GET Functions--------------------------------------//
-
-void graph::setSecondarySwitchesSelections(QVector<int> value){
-    secondaryGaphSelection = value;
-}
-
-void graph::setSecondaryGraphSelection(QVector<int> values){
-    secondaryGaphSelection = values;
-}
 
 void  graph::setIsSerialOpened(bool value){
     isSerialOpened = value;

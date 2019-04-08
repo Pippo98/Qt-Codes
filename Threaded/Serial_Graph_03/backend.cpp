@@ -58,8 +58,19 @@ void backend::buttonClicked(int id, int value){
     }
 }
 
+void backend::switchChanged(int id, int value){
+    switch(id){
+    case 0:
+        s.setLogState(value);
+        break;
+    case 1:
+        s.setCanMode(value);
+        s.restartSequence();
+        break;
+    }
+}
+
 void backend::logSwitchChanged(int value){
-    s.setLogState(value);
 }
 
 
