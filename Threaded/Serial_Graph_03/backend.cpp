@@ -66,6 +66,7 @@ void backend::switchChanged(int id, int value){
     case 1:
         s.setCanMode(value);
         s.restartSequence();
+        g.restartSequence();
         break;
     }
 }

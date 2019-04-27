@@ -33,6 +33,9 @@ public:
 
     void displayHelp();
 
+    QList<QString> normalizeCommand(QList<QString>, bool *);
+    void sendDelayedCommand(const QByteArray, int);
+
     //function used for the thread
     void run() override;
 
@@ -56,7 +59,7 @@ public slots:
     void setSecondarySwitchesSelections(int, int, int);
     void setPrimarySwitches(int, int);
 
-    void sendCommand(QString);
+    void sendCommand(QString, QString);
 
     bool getCanMode();
     void setCanMode(int);

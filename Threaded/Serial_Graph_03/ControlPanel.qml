@@ -32,7 +32,7 @@ Item {
             Timer{
                 running: true
                 repeat: true
-                interval: 500
+                interval: 1000
                 onTriggered: {
                     comboBox.members = serial.detectPort()
                 }

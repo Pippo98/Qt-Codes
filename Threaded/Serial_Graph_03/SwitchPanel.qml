@@ -6,6 +6,7 @@ import QtQuick.Controls.Styles 1.4
 Item {
     RowLayout{
         id: rowLayout
+        anchors.fill: parent
         ColumnLayout{
             id: switchColumn
             Layout.alignment: Qt.AlignLeft
@@ -32,7 +33,8 @@ Item {
         }
         SecondarySwitch{
             id: secondarySwitch
-            anchors.left: parent.right
+            Layout.fillHeight: true
+            Layout.fillWidth: true
         }
     }
 }

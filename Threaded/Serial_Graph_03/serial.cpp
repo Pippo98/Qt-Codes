@@ -19,6 +19,7 @@
 
 static QFile *fil = new QFile();
 static QTimer *tim1 = new QTimer();
+static QTimer *commandTimer = new QTimer();
 static QMutex mute;
 
 static graph g;
@@ -68,6 +69,7 @@ static QList<QByteArray> terminalText;
 static QList<int> terminalIds;
 
 static int messagesCounter = 0;
+static int parsedCounter = 0;
 
 static QWaitCondition newData;
 static bool isPortOpened;
@@ -181,7 +183,7 @@ void serial::run(){
             mute.unlock();
         }
         else{
-            qDebug() << "lock failed -> serial -> run()";
+            //qDebug() << "lock failed -> serial -> run()";
         }
     }
 }
@@ -195,13 +197,13 @@ void serial::manageFunctions(){
             fil->write(serialData);
             messagesCounter ++;
             //qDebug() << serialData;
-            newData.wakeAll();
             //qDebug() << serialPort->bytesAvailable();
         }
+        newData.wakeAll();
         mute.unlock();
     }
     else{
-        qDebug() << "lock failed -> serial -> manageFunctions()";
+        //qDebug() << "lock failed -> serial -> manageFunctions()";
     }
 }
 
@@ -224,6 +226,7 @@ void serial::canSniffer(){
 
 //differentiate the data from different id
 void serial::parseCan(){
+    parsedCounter ++;
 
     timer.start();
 
@@ -235,7 +238,7 @@ void serial::parseCan(){
                 if(int(dataArray[2]) == 2){
                     frontal.steer = dataArray[3];
                 }
-                if(int(dataArray[2]) == 4){
+                else if(int(dataArray[2]) == 4){
                     frontal.gx = dataArray[3] * 256;
                     frontal.gx += dataArray[4];
                     frontal.gy = dataArray[5] * 256;
@@ -243,7 +246,7 @@ void serial::parseCan(){
                     frontal.gz = dataArray[7] * 256;
                     frontal.gz += dataArray[8];
                 }
-                if(int(dataArray[2]) == 5){
+                else if(int(dataArray[2]) == 5){
                     frontal.ax = dataArray[3] * 256;
                     frontal.ax += dataArray[4];
                     frontal.ay = dataArray[5] * 256;
@@ -252,30 +255,30 @@ void serial::parseCan(){
                     frontal.az += dataArray[8];
                 }
             }
-            if(int(dataArray[1]) == 208){
+            else if(int(dataArray[1]) == 208){
                 if(int(dataArray[2]) == 6){
                     frontal.encoder1 = dataArray[3] * 256;
                     frontal.encoder1 += dataArray[4];
                 }
-                if(int(dataArray[2]) == 7){
+                else if(int(dataArray[2]) == 7){
                     frontal.encoder2 = dataArray[3];
                 }
             }
         }
         //PEADLS
-        if(switchesSelections.at(1)){
+        else if(switchesSelections.at(1)){
             if(int(dataArray[1]) == 176){
                 if(int(dataArray[2]) == 1){
                     pedals.apps1 = dataArray[3];
                     pedals.apps2 = dataArray[4];
                 }
-                if(int(dataArray[2]) == 2){
+                else if(int(dataArray[2]) == 2){
                     pedals.brk = dataArray[3];
                 }
             }
         }
         //LVACCUMULATOR
-        if(switchesSelections.at(4)){
+        else if(switchesSelections.at(4)){
             if(int(dataArray[1]) == 255){
                 lvAccumulator.volt = dataArray[2] / 10;
                 lvAccumulator.avgTemp = dataArray[4];
@@ -283,9 +286,6 @@ void serial::parseCan(){
             }
         }
     }
-
-    nanoSec = timer.nsecsElapsed();
-    qDebug() << nanoSec;
 
     if(switchesSelections.count() > 0){
         canArr.clear();
@@ -303,15 +303,15 @@ void serial::parseCan(){
             canArr.append(frontal.steer);
         }
         //PEDALS
-        if(switchesSelections.at(1) == 1){
+        if(switchesSelections.at(1)){
             canArr.append(pedals.apps1);
             canArr.append(pedals.apps2);
             canArr.append(pedals.brk);
-        }
+        }/*
         //ECU
         if(switchesSelections.at(2)){
 
-        }/*
+        }
         //INVERTER
         if(switchesSelections.at(3)){
 
@@ -326,15 +326,22 @@ void serial::parseCan(){
         if(switchesSelections.at(5) == 1){
 
         }*/
-        if(canArr.count() > 0){
+        if(canArr.size() > 0 && graphSelection.size() > 0){
             QVector<double> buff;
-            for(int i = 0; i < graphSelection.count(); i++){
-                if(graphSelection.at(i) == 1 && i < canArr.count())
-                buff.append(canArr.at(i));
+            for(int i = 0; i < graphSelection.size(); i++){
+                if(i < canArr.count()){
+                    if(graphSelection.at(i))
+                    buff.append(canArr.at(i));
+                }
+                else{
+                    break;
+                }
             }
             canArr = buff;
         }
     }
+    nanoSec = timer.nsecsElapsed();
+    //qDebug() << nanoSec;
 }
 
 //function to get all the numbers in the buffer received
@@ -516,7 +523,9 @@ void serial::displayHelp(){
 //set the text in the qml files with the given object
 void serial::displayPerformanceInfo(){
     QString txt = "messages per second: " + QString::number(messagesCounter * 1000/tim1->interval());
+    qDebug() << messagesCounter - parsedCounter;
     messagesCounter = 0;
+    parsedCounter = 0;
     infoTextArea->setProperty("displayableText", txt);
     if(terminalText.count() > 0){
         QByteArray buff = terminalText.join("");
@@ -538,9 +547,12 @@ void serial::initInfoTextArea(QObject * obj){
     infoTextArea = obj;
 }
 
-void serial::sendCommand(QString data){
+void serial::sendCommand(QString data, QString _delay){
+
+    bool castSucceed;
 
     QList<QString> bytes = data.split(" ");
+    int delay = _delay.toInt(&castSucceed);
 
     if(CAN_MODE){
         if(data.length() == 0){
@@ -548,43 +560,70 @@ void serial::sendCommand(QString data){
             return;
         }
 
-        while(bytes.last() == " " || bytes.last() == "" || bytes.length() > 9){
-            bytes.removeAt(bytes.length()-1);
-        }
+        bool success;
+        normalizeCommand(bytes, &success);
 
-        while(bytes.length() < 9){
-            bytes.append("000");
-        }
-
-        for(int i = 0; i < bytes.length(); i++){
-            while(bytes.at(i).length() < 3){
-                bytes[i].prepend("0");
-            }
-
-            bool isNumber = false;
-            bytes.at(i).toInt(&isNumber);
-
-            if(!isNumber){
-                textField->setProperty("propColor", "red");
-                return;
-            }
-            if(bytes.at(i).toInt() > 255){
-                bytes[i] = "255";
-            }
-        }
-
-        bytes.append("-");
     }
 
     const QByteArray &buff = bytes.join(" ").toUtf8();
 
-    if(serialPort->isWritable() && serialPort->isOpen()){
-        textField->setProperty("propColor", "green");
-        serialPort->write(buff);
+    if(castSucceed && delay != 0 && serialPort->isWritable() && serialPort->isOpen()){
+        sendDelayedCommand(buff, delay);
     }
     else{
-        textField->setProperty("propColor", "red");
+        if(serialPort->isWritable() && serialPort->isOpen()){
+            textField->setProperty("propColor", "green");
+            serialPort->write(buff);
+        }
+        else{
+            textField->setProperty("propColor", "red");
+        }
     }
+}
+
+void serial::sendDelayedCommand(const QByteArray buffer, int delay){
+
+    QObject::disconnect(commandTimer, &QTimer::timeout, nullptr, nullptr);
+    commandTimer->setInterval(delay);
+    commandTimer->start();
+    connect(commandTimer, &QTimer::timeout, [=](){
+        serialPort->write(buffer);
+        qDebug() << "sent" << buffer;
+    });
+}
+
+QList<QString> serial::normalizeCommand(QList<QString> bytes, bool * success){
+    *success = true;
+
+    while(bytes.last() == " " || bytes.last() == "" || bytes.length() > 9){
+        bytes.removeAt(bytes.length()-1);
+    }
+
+    while(bytes.length() < 9){
+        bytes.append("000");
+    }
+
+    for(int i = 0; i < bytes.length(); i++){
+        while(bytes.at(i).length() < 3){
+            bytes[i].prepend("0");
+        }
+
+        bool isNumber = false;
+        bytes.at(i).toInt(&isNumber);
+
+        if(!isNumber){
+            textField->setProperty("propColor", "red");
+            *success = false;
+            break;
+        }
+        if(bytes.at(i).toInt() > 255){
+            bytes[i] = "255";
+        }
+    }
+
+    bytes.append("-");
+
+    return bytes;
 }
 
 bool serial::getCanMode(){

@@ -12,6 +12,7 @@ ChartView {
 
     property bool graphRequested: false
     property int resizeInterval: 100
+    property bool openGL: true
 
     Component.onCompleted: {
         for(var i = 0; i < 20; i++){
@@ -177,6 +178,7 @@ ChartView {
         axisX: axisX
         axisY: axisY1
         visible: false
+        useOpenGL: chartView.openGL
     }
 
     LineSeries {
@@ -186,6 +188,7 @@ ChartView {
         axisX: axisX
         axisY: axisY2
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries3
@@ -194,6 +197,7 @@ ChartView {
         axisX: axisX
         axisY: axisY3
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries4
@@ -202,6 +206,7 @@ ChartView {
         axisX: axisX
         axisY: axisY4
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries5
@@ -210,6 +215,7 @@ ChartView {
         axisX: axisX
         axisY: axisY5
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries6
@@ -218,6 +224,7 @@ ChartView {
         axisX: axisX
         axisY: axisY6
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries7
@@ -226,6 +233,7 @@ ChartView {
         axisX: axisX
         axisY: axisY7
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries8
@@ -234,6 +242,7 @@ ChartView {
         axisX: axisX
         axisY: axisY8
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries9
@@ -242,6 +251,7 @@ ChartView {
         axisX: axisX
         axisY: axisY9
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries10
@@ -250,6 +260,7 @@ ChartView {
         axisX: axisX
         axisY: axisY10
         visible: false
+        useOpenGL: chartView.openGL
     }
 
     LineSeries {
@@ -259,6 +270,7 @@ ChartView {
         axisX: axisX
         axisY: axisY11
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries12
@@ -267,6 +279,7 @@ ChartView {
         axisX: axisX
         axisY: axisY12
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries13
@@ -275,6 +288,7 @@ ChartView {
         axisX: axisX
         axisY: axisY13
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries14
@@ -283,6 +297,7 @@ ChartView {
         axisX: axisX
         axisY: axisY14
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries15
@@ -291,6 +306,7 @@ ChartView {
         axisX: axisX
         axisY: axisY15
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries16
@@ -299,6 +315,7 @@ ChartView {
         axisX: axisX
         axisY: axisY16
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries17
@@ -307,6 +324,7 @@ ChartView {
         axisX: axisX
         axisY: axisY17
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries18
@@ -315,6 +333,7 @@ ChartView {
         axisX: axisX
         axisY: axisY18
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries19
@@ -323,6 +342,7 @@ ChartView {
         axisX: axisX
         axisY: axisY19
         visible: false
+        useOpenGL: chartView.openGL
     }
     LineSeries {
         id: lineSeries20
@@ -331,5 +351,6 @@ ChartView {
         axisX: axisX
         axisY: axisY20
         visible: false
+        useOpenGL: chartView.openGL
     }
 }

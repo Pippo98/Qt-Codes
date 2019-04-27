@@ -86,7 +86,7 @@ void graph::managePoints(QVector<double> data){
         mute.unlock();
     }
     else{
-        qDebug() << "lock failed -> graph -> managePoints()";
+        //qDebug() << "lock failed -> graph -> managePoints()";
     }
 }
 
@@ -160,7 +160,7 @@ void graph::run(){
             this->msleep(u_int64_t(frameRate));
         }
         else{
-            qDebug() << "lock failed -> graph -> run()";
+            //qDebug() << "lock failed -> graph -> run()";
         }
     }
 }

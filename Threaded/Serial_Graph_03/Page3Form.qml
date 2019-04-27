@@ -10,86 +10,121 @@ Page {
         padding: 10
     }
 
-    RowLayout{
+    ColumnLayout{
         id: row
-        anchors.fill: parent
-        spacing: 10
+        //anchors.fill: parent
+        spacing: 1
+        RowLayout{
+            id: sendRow
+            Layout.fillHeight: true
+            Layout.fillWidth: true
 
-        Rectangle{
-            id: inputField
+            Layout.preferredWidth: row.width
+            Layout.preferredHeight: width / 30
+            Rectangle{
+                id: inputField
 
-            property string propColor: "lightgrey"
+                property string propColor: "lightgrey"
 
-            Layout.alignment: Qt.AlignTop
-            width: parent.width
-            height: width/ 20
+                Layout.alignment: Qt.AlignCenter
+                Layout.fillHeight: true
+                Layout.fillWidth: true
 
-            radius: height / 2
-            color: propColor
+                Layout.maximumWidth: sendRow.width / 12 * 6
+                Layout.maximumHeight: sendRow.height
+
+//                width: parent.width / 12 * 6
+//                height: width / 10
+
+                radius: height / 8
+                color: propColor
+
 
                 TextInput{
                     id: input
 
-                    anchors.fill: inputField
-                    anchors.leftMargin: 20
-                    anchors.topMargin: 5
+                    anchors.fill: parent
+
+                    font.pixelSize: 20
+
+                    text: "192 0 1 2 3 4 5 6 7"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+
+                    Component.onCompleted: {
+                        serial.initTextField(inputField)
+                    }
+                }
+            }
+            Rectangle{
+                id: timeField
+
+                property string propColor: "lightgrey"
+
+                Layout.alignment: Qt.AlignCenter
+                Layout.fillHeight: true
+                Layout.fillWidth: true
+
+                Layout.maximumWidth: parent.width / 12 * 3
+                Layout.maximumHeight: inputField.height
+
+                radius: height / 8
+                color: propColor
+
+                TextInput{
+                    id: timeDelay
+
+                    anchors.fill: timeField
+
+                    font.pixelSize: 20
 
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
 
-                    maximumLength: 3
-
-                    inputMethodHints: {
-                        Qt.ImhFormattedNumbersOnly
-                        //Qt.ImhExclusiveInputMask
-                    }
-                    onEditingFinished: {
-                        if(acceptableInput)
-                            console.log(text)
-                    }
                 }
+            }
 
-            /*
-            TextInput{
-                id: input
+            Button{
+                id: sendButton
 
-                anchors.fill: inputField
-                anchors.leftMargin: 20
-                anchors.topMargin: 5
+                Layout.alignment: Qt.AlignCenter
+                Layout.fillHeight: true
+                Layout.fillWidth: true
 
-                font.pixelSize: 20
+                Layout.maximumWidth: parent.width / 12 * 3
+                implicitHeight: inputField.height * 4
 
-                text: "192 0 1 2 3 4 5 6 7"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+                //implicitWidth: parent.width / 12 * 3
 
-                onEditingFinished: {
-                    serial.sendCommand(text)
+                text: "Send"
+
+                onClicked: {
+                    serial.sendCommand(input.text, timeDelay.text)
                 }
-                Component.onCompleted: {
-                    serial.initTextField(inputField)
-                }
-            }*/
+            }
+        }
+
+        Text{
+            id: title
+
+            Layout.alignment: Qt.AlignCenter
+
+            color: "white"
+            font.pointSize: 20
+            text: "CAN Sniffer"
         }
 
         TextArea{
             id: textBox
             Layout.fillWidth: true
 
-            anchors.top: inputField.bottom
-            anchors.horizontalCenter: inputField.horizontalCenter
-            anchors.bottom: parent.bottom
+//            anchors.top: title.bottom
+//            anchors.horizontalCenter: title.horizontalCenter
+//            anchors.bottom: parent.bottom
 
             readOnly: false
 
             property string displaybleText: ""
-/*
-            property string line1: ""
-            property string line2: ""
-            property string line3: ""
-            property string line4: ""
-            property string line5: ""
-            property string line6: ""*/
 
             Component.onCompleted: {
                 serial.initTextArea(textBox)
@@ -107,3 +142,28 @@ Page {
 
     }
 }
+
+
+
+//            TextInput{
+//                id: input
+
+//                anchors.fill: inputField
+//                anchors.leftMargin: 20
+//                anchors.topMargin: 5
+
+//                horizontalAlignment: Text.AlignHCenter
+//                verticalAlignment: Text.AlignVCenter
+
+//                maximumLength: 3
+
+//                inputMethodHints: {
+//                    Qt.ImhFormattedNumbersOnly
+//                    //Qt.ImhExclusiveInputMask
+//                }
+//                onEditingFinished: {
+//                    if(acceptableInput)
+//                        console.log(text)
+//                }
+//            }
+
