@@ -54,6 +54,7 @@ static QVector<int>             graphSelection;
 static QSerialPort *serialPort = new QSerialPort();
 
 static QByteArray serialData;
+static QList<QByteArray> serialDataQueue;
 
 static bool logState = false;
 
@@ -171,8 +172,14 @@ void serial::run(){
                 parseData();
 
                 if(CAN_MODE){
+                    QElapsedTimer el1;
+                    el1.start();
+
                     parseCan();
-                    g.managePoints(canArr);
+
+                    //qDebug() << el1.nsecsElapsed()/1000;
+                    qDebug() << serialDataQueue.length();
+                    //g.managePoints(canArr);
                     canSniffer();
                 }
                 else{
@@ -193,6 +200,7 @@ void serial::manageFunctions(){
     if(mute.try_lock()){
         while(serialPort->bytesAvailable() > 50){
             serialData = serialPort->readLine();
+            //serialDataQueue.append(serialData);
             if(logState)
             fil->write(serialData);
             messagesCounter ++;
@@ -209,7 +217,7 @@ void serial::manageFunctions(){
 
 void serial::canSniffer(){
     int flag = 0;
-    if(terminalIds.count() > 0 && terminalText.count() > 0 && dataArray.count() > 0){
+    if(terminalIds.count() > 0 && terminalText.count() > 0 && dataArray.count() > 8){
         for(int i = 0; i < terminalIds.count(); i++){
             if(terminalIds.at(i) == int(dataArray.at(1))){
                 terminalText[i] = serialData;
@@ -219,8 +227,10 @@ void serial::canSniffer(){
         }
     }
     if(!flag){
-        terminalIds.append(int(dataArray.at(1)));
-        terminalText.append(serialData);
+        if(dataArray.count() > 8){
+            terminalIds.append(int(dataArray.at(1)));
+            terminalText.append(serialData);
+        }
     }
 }
 
@@ -230,13 +240,15 @@ void serial::parseCan(){
 
     timer.start();
 
+    canArr.clear();
+
     //Check if the CAN message is correct
     if(dataArray.count() >= 8 && switchesSelections.count() > 0){
         //FRONTAL
         if(switchesSelections.at(0)){
             if(int(dataArray[1]) == 192){
                 if(int(dataArray[2]) == 2){
-                    frontal.steer = dataArray[3];
+                    frontal.steer = dataArray[4];
                 }
                 else if(int(dataArray[2]) == 4){
                     frontal.gx = dataArray[3] * 256;
@@ -264,6 +276,17 @@ void serial::parseCan(){
                     frontal.encoder2 = dataArray[3];
                 }
             }
+
+            canArr.append(frontal.encoder1);
+            canArr.append(frontal.encoder2);
+            canArr.append(frontal.ax);
+            canArr.append(frontal.ay);
+            canArr.append(frontal.az);
+            canArr.append(frontal.gx);
+            canArr.append(frontal.gy);
+            canArr.append(frontal.gz);
+            canArr.append(frontal.steer);
+
         }
         //PEADLS
         else if(switchesSelections.at(1)){
@@ -276,6 +299,11 @@ void serial::parseCan(){
                     pedals.brk = dataArray[3];
                 }
             }
+
+            canArr.append(pedals.apps1);
+            canArr.append(pedals.apps2);
+            canArr.append(pedals.brk);
+
         }
         //LVACCUMULATOR
         else if(switchesSelections.at(4)){
@@ -284,48 +312,15 @@ void serial::parseCan(){
                 lvAccumulator.avgTemp = dataArray[4];
                 lvAccumulator.maxTemp = dataArray[5];
             }
+
+            canArr.append(lvAccumulator.volt);
+            canArr.append(lvAccumulator.avgTemp);
+            canArr.append(lvAccumulator.maxTemp);
+
         }
     }
 
     if(switchesSelections.count() > 0){
-        canArr.clear();
-
-        //FRONTAL
-        if(switchesSelections.at(0)){
-            canArr.append(frontal.encoder1);
-            canArr.append(frontal.encoder2);
-            canArr.append(frontal.ax);
-            canArr.append(frontal.ay);
-            canArr.append(frontal.az);
-            canArr.append(frontal.gx);
-            canArr.append(frontal.gy);
-            canArr.append(frontal.gz);
-            canArr.append(frontal.steer);
-        }
-        //PEDALS
-        if(switchesSelections.at(1)){
-            canArr.append(pedals.apps1);
-            canArr.append(pedals.apps2);
-            canArr.append(pedals.brk);
-        }/*
-        //ECU
-        if(switchesSelections.at(2)){
-
-        }
-        //INVERTER
-        if(switchesSelections.at(3)){
-
-        }*/
-        //LOW VOLTAGE
-        if(switchesSelections.at(4)){
-            canArr.append(lvAccumulator.volt);
-            canArr.append(lvAccumulator.avgTemp);
-            canArr.append(lvAccumulator.maxTemp);
-        }/*
-        //HIGH VOLTAGE
-        if(switchesSelections.at(5) == 1){
-
-        }*/
         if(canArr.size() > 0 && graphSelection.size() > 0){
             QVector<double> buff;
             for(int i = 0; i < graphSelection.size(); i++){
@@ -347,6 +342,8 @@ void serial::parseCan(){
 //function to get all the numbers in the buffer received
 void serial::parseData(){
 
+    //QList<QByteArray> dataSplitted = serialDataQueue[0].split('\t');
+    //serialDataQueue.removeAt(0);
     QList<QByteArray> dataSplitted = serialData.split('\t');
 
     //if the numbers found in the received string are te same number ad the average found then do the cast fo float
@@ -467,7 +464,7 @@ bool serial::init(){
     serialPort->setParity(QSerialPort::NoParity);
 
     if(serialPort->open(QSerialPort::ReadWrite)){
-        tim1->setInterval(500);
+        tim1->setInterval(1000);
         tim1->start();
         QObject::connect(tim1, SIGNAL(timeout()), SLOT(displayPerformanceInfo()));
         result = true;
@@ -522,8 +519,9 @@ void serial::displayHelp(){
 
 //set the text in the qml files with the given object
 void serial::displayPerformanceInfo(){
-    QString txt = "messages per second: " + QString::number(messagesCounter * 1000/tim1->interval());
-    qDebug() << messagesCounter - parsedCounter;
+    QString txt = "messages per second: " + QString::number(messagesCounter * 1000/tim1->interval())
+                + "\r\n"
+                + "lost per second: " + QString::number(abs(messagesCounter - parsedCounter));
     messagesCounter = 0;
     parsedCounter = 0;
     infoTextArea->setProperty("displayableText", txt);

@@ -40,9 +40,13 @@ void backend::buttonClicked(int id, int value){
     switch (id) {
     case 0:
         if(value == 0){
-            emit portStateChanged(s.init());
-            s.connection();
-            g.connections();
+            if (s.init()){
+                emit portStateChanged(true);
+                s.connection();
+                g.connections();
+            }else{
+                emit portStateChanged(false);
+            }
         }
         else{
             emit portStateChanged(s.deInit());

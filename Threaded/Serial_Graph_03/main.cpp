@@ -5,6 +5,7 @@
 #include <QQuickView>
 #include <QQmlContext>
 #include <QDebug>
+#include <QObject>
 
 #include "graph.h"
 #include "serial.h"
@@ -23,12 +24,12 @@ int main(int argc, char *argv[])
     serial  _serial;
     graph   _graph;
 
-    _serial.start(QThread::Priority::HighestPriority);
-    _graph.start(QThread::Priority::HighPriority);
-
     ctx->setContextProperty("serial", &_serial);
     ctx->setContextProperty("backend", &_backend);
     ctx->setContextProperty("graph", &_graph);
+
+    _serial.start(QThread::Priority::HighestPriority);
+    _graph.start(QThread::Priority::HighPriority);
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
