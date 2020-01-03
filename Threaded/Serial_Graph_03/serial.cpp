@@ -165,11 +165,14 @@ serial::~serial(){
 void serial::run(){
     while(threadActive){
         if(mute.try_lock() && newData.wait(&mute)){
+            qDebug() << timer.nsecsElapsed();
             if(!doneCalibration && !CAN_MODE){
                 detectGraphs();
+                mute.unlock();
             }
             if(doneCalibration || CAN_MODE){
                 parseData();
+                mute.unlock();
 
                 if(CAN_MODE){
                     QElapsedTimer el1;
@@ -178,7 +181,7 @@ void serial::run(){
                     parseCan();
 
                     //qDebug() << el1.nsecsElapsed()/1000;
-                    qDebug() << serialDataQueue.length();
+                    //qDebug() << serialDataQueue.length();
                     //g.managePoints(canArr);
                     canSniffer();
                 }
@@ -187,7 +190,6 @@ void serial::run(){
                     g.managePoints(dataArray);
                 }
             }
-            mute.unlock();
         }
         else{
             //qDebug() << "lock failed -> serial -> run()";
@@ -197,21 +199,16 @@ void serial::run(){
 
 //main function to manage the program flow
 void serial::manageFunctions(){
-    if(mute.try_lock()){
-        while(serialPort->bytesAvailable() > 50){
-            serialData = serialPort->readLine();
-            //serialDataQueue.append(serialData);
-            if(logState)
-            fil->write(serialData);
-            messagesCounter ++;
-            //qDebug() << serialData;
-            //qDebug() << serialPort->bytesAvailable();
-        }
-        newData.wakeAll();
+    while(serialPort->bytesAvailable() > 50){
+        mute.lock();
+        serialData = serialPort->readLine();
+        serialDataQueue.append(serialData);
         mute.unlock();
-    }
-    else{
-        //qDebug() << "lock failed -> serial -> manageFunctions()";
+        timer.start();
+        newData.wakeAll();
+        if(logState)
+        fil->write(serialData);
+        messagesCounter ++;
     }
 }
 
@@ -237,8 +234,6 @@ void serial::canSniffer(){
 //differentiate the data from different id
 void serial::parseCan(){
     parsedCounter ++;
-
-    timer.start();
 
     canArr.clear();
 
@@ -335,16 +330,16 @@ void serial::parseCan(){
             canArr = buff;
         }
     }
-    nanoSec = timer.nsecsElapsed();
-    //qDebug() << nanoSec;
 }
 
 //function to get all the numbers in the buffer received
 void serial::parseData(){
 
-    //QList<QByteArray> dataSplitted = serialDataQueue[0].split('\t');
-    //serialDataQueue.removeAt(0);
-    QList<QByteArray> dataSplitted = serialData.split('\t');
+    if(serialDataQueue.length() == 0)
+    return;
+    QList<QByteArray> dataSplitted = serialDataQueue[0].split('\t');
+    serialDataQueue.removeAt(0);
+    //QList<QByteArray> dataSplitted = serialData.split('\t');
 
     //if the numbers found in the received string are te same number ad the average found then do the cast fo float
     if(dataSplitted.count() == g.totalGraphs || CAN_MODE){
@@ -517,11 +512,15 @@ void serial::displayHelp(){
     msgBox.exec();
 }
 
+int lenBFF = 0;
+
 //set the text in the qml files with the given object
 void serial::displayPerformanceInfo(){
     QString txt = "messages per second: " + QString::number(messagesCounter * 1000/tim1->interval())
                 + "\r\n"
                 + "lost per second: " + QString::number(abs(messagesCounter - parsedCounter));
+    qDebug() << serialDataQueue.length() - lenBFF;
+    lenBFF = serialDataQueue.length();
     messagesCounter = 0;
     parsedCounter = 0;
     infoTextArea->setProperty("displayableText", txt);
